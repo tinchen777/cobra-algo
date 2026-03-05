@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "repo-name"
+name = "cobra-algo"
 dynamic = ["version"]
 description = "XXX"
 readme = "README.md"
@@ -17,19 +17,19 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/user_name/repo-name.git"
-Repository = "https://github.com/user_name/repo-name.git"
-Issues = "https://github.com/user_name/repo-name.git/issues"
+Homepage = "https://github.com/user_name/cobra-algo.git"
+Repository = "https://github.com/user_name/cobra-algo.git"
+Issues = "https://github.com/user_name/cobra-algo.git/issues"
 
 [tool.setuptools.dynamic]
-version = {attr = "repo_name.__version__"}
+version = {attr = "cobra_algo.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["repo_name*"]
+include = ["cobra_algo*"]
 
 [tool.setuptools.package-data]
-repo_name = [
+cobra_algo = [
     "draw/fonts/*.ttf",
     "draw/fonts/*.TTF"
 ]

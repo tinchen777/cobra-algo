@@ -1,15 +1,15 @@
 <div align="center">
 
-<h2 id="title">🐱‍👤 repo-name 🐱‍👤</h2>
+<h2 id="title">🐱‍👤 cobra-algo 🐱‍👤</h2>
 
-[![PyPI version](https://img.shields.io/pypi/v/repo-name.svg)](https://pypi.org/project/repo-name/)
-![Python](https://img.shields.io/pypi/pyversions/repo-name.svg)
-[![Tests](https://github.com/user_name/repo-name/actions/workflows/test.yml/badge.svg)](https://github.com/user_name/repo-name/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/user_name/repo-name/branch/main/graph/badge.svg)](https://codecov.io/gh/user_name/repo-name)
-![License](https://img.shields.io/github/license/user_name/repo-name.svg)
+[![PyPI version](https://img.shields.io/pypi/v/cobra-algo.svg)](https://pypi.org/project/cobra-algo/)
+![Python](https://img.shields.io/pypi/pyversions/cobra-algo.svg)
+[![Tests](https://github.com/user_name/cobra-algo/actions/workflows/test.yml/badge.svg)](https://github.com/user_name/cobra-algo/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/user_name/cobra-algo/branch/main/graph/badge.svg)](https://codecov.io/gh/user_name/cobra-algo)
+![License](https://img.shields.io/github/license/user_name/cobra-algo.svg)
 
-[![Pull Requests Welcome](https://img.shields.io/badge/pull%20requests-welcome-brightgreen.svg)](https://github.com/user_name/repo-name/pulls)
-![Github stars](https://img.shields.io/github/stars/user_name/repo-name.svg)
+[![Pull Requests Welcome](https://img.shields.io/badge/pull%20requests-welcome-brightgreen.svg)](https://github.com/user_name/cobra-algo/pulls)
+![Github stars](https://img.shields.io/github/stars/user_name/cobra-algo.svg)
 
 </div>
 
@@ -31,7 +31,7 @@ XXX
 Stable (once published):
 
 ```bash
-pip install repo-name
+pip install cobra-algo
 ```
 
 ## Quick Start
