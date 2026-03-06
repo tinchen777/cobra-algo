@@ -22,12 +22,12 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "numpy>=1.21",
+    "numpy>=1.21,<2.0",
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=1.11.0"]
-sklearn = ["scikit-learn>=1.1"]
+torch = ["torch>=1.11.0,<2.0"]
+sklearn = ["scikit-learn>=1.1,<2.0"]
 dev = [
     "pytest",
     "pytest-cov",

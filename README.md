@@ -1,6 +1,6 @@
 <div align="center">
 
-<h2 id="title">🐱‍👤 cobra-algo 🐱‍👤</h2>
+<h2 id="title">🐱‍🐉 cobra-algo 🐱‍🐉</h2>
 
 
 [![PyPI version](https://img.shields.io/pypi/v/cobra-algo.svg)](https://pypi.org/project/cobra-algo/)
@@ -18,7 +18,7 @@
 A lightweight and extensible Python library for algorithm implementations in data processing and machine learning.
 
 - Python: 3.9+
-- Runtime deps: NumPy (>=1.21)
+- Runtime deps: `NumPy` (>=1.21, <2.0)
 
 ## Features
 
@@ -48,8 +48,8 @@ pip install cobra-algo[torch]
 ## Requirements
 
 - Python >= 3.9
-- `NumPy` >= 1.21
-- (Optional) `PyTorch` >= 1.11.0
+- `NumPy` >= 1.21, <2.0
+- (Optional) `PyTorch` >= 1.11.0, <2.0
 
 ## License
 
