@@ -5,21 +5,30 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cobra-algo"
 dynamic = ["version"]
-description = "XXX"
+description = "A lightweight and extensible Python library for algorithm implementations in data processing and machine learning."
 readme = "README.md"
 license-files = ["LICENSE"]
 authors = [
     {name = "Zhen Tian", email = "zhen.tian.cs@gmail.com"}
 ]
-requires-python = ""
+requires-python = ">=3.9"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
 dependencies = [
-
+    "numpy>=1.21",
 ]
 
 [project.urls]
-Homepage = "https://github.com/user_name/cobra-algo.git"
-Repository = "https://github.com/user_name/cobra-algo.git"
-Issues = "https://github.com/user_name/cobra-algo.git/issues"
+Homepage = "https://github.com/tinchen777/cobra-algo.git"
+Repository = "https://github.com/tinchen777/cobra-algo.git"
+Issues = "https://github.com/tinchen777/cobra-algo.git/issues"
 
 [tool.setuptools.dynamic]
 version = {attr = "cobra_algo.__version__"}
@@ -27,9 +36,3 @@ version = {attr = "cobra_algo.__version__"}
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["cobra_algo*"]
-
-[tool.setuptools.package-data]
-cobra_algo = [
-    "draw/fonts/*.ttf",
-    "draw/fonts/*.TTF"
-]

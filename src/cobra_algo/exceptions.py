@@ -1,17 +1,17 @@
-# src/cobra_log/exceptions.py
+# src/cobra_algo/exceptions.py
 """
-Exceptions for for :pkg:`cobra_log` package.
+Exceptions for for :pkg:`cobra_algo` package.
 """
 
 
 # === WARNING ===
 class CobraAlgoWarning(Warning):
-    r"""Base warning class for :pkg:`cobra_log` package."""
+    r"""Base warning class for :pkg:`cobra_algo` package."""
 
 
 # === ERROR ===
 class CobraAlgoError(Exception):
-    r"""Base error class for :pkg:`cobra_log` package."""
+    r"""Base error class for :pkg:`cobra_algo` package."""
 
 
 class NotFittedError(CobraAlgoError):
