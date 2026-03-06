@@ -25,6 +25,14 @@ dependencies = [
     "numpy>=1.21",
 ]
 
+[project.optional-dependencies]
+torch = ["torch>=1.11.0"]
+sklearn = ["scikit-learn>=1.1"]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
 [project.urls]
 Homepage = "https://github.com/tinchen777/cobra-algo.git"
 Repository = "https://github.com/tinchen777/cobra-algo.git"

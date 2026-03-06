@@ -27,10 +27,20 @@ A lightweight and extensible Python library for algorithm implementations in dat
 
 ## Installation
 
-Stable (once published):
+### Install from PyPI
+
+This installs the core package with minimal dependencies.
 
 ```bash
 pip install cobra-algo
+```
+
+### Install with Optional Dependencies
+
+PyTorch support.
+
+```bash
+pip install cobra-algo[torch]
 ```
 
 ## Quick Start
@@ -39,7 +49,7 @@ pip install cobra-algo
 
 - Python >= 3.9
 - `NumPy` >= 1.21
-- - (Optional) `PyTorch` >= 1.11.0
+- (Optional) `PyTorch` >= 1.11.0
 
 ## License
 
