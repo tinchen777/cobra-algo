@@ -27,10 +27,10 @@ dependencies = [
 
 [project.optional-dependencies]
 torch = ["torch>=1.11.0,<2.0"]
-sklearn = ["scikit-learn>=1.1,<2.0"]
 dev = [
     "pytest",
     "pytest-cov",
+    "scikit-learn>=1.1,<2.0",
 ]
 
 [project.urls]
