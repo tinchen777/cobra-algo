@@ -3,12 +3,11 @@
 # @TianZhen
 
 from __future__ import annotations
-import numpy as np
-from numpy.typing import NDArray
 from collections import Counter
-from typing import (Any, Dict, Literal, Union, Optional)
+from cobra_array.compat import CompatArray
+from typing import (Any, Dict, Literal, Union, Sequence, Optional, NamedTuple, TYPE_CHECKING)
 
-from .._utils import (to_numpy, AlgoResult)
+from .._utils import CXP
 from ..exceptions import (
     NotFittedError,
     DimensionError,
@@ -18,7 +17,26 @@ from ..exceptions import (
     CountVectorizerError
 )
 
+if TYPE_CHECKING:
+    from cobra_array.types import (ArrayLike, AnyDevice)
+
 EPS = 1e-12
+
+
+class CountResult(NamedTuple):
+    result: CompatArray[type[float], Any]
+    vocab: Union[Dict[Any, int], int]
+
+
+class TFIDFResult(NamedTuple):
+    result: CompatArray[type[float], Any]
+    idf: Optional[CompatArray[type[float], Any]]
+
+
+class AllTFIDFResult(NamedTuple):
+    result: CompatArray[type[float], Any]
+    idf: Optional[CompatArray[type[float], Any]]
+    vocab: Union[Dict[Any, int], int]
 
 
 def tf_idf(
@@ -30,7 +48,7 @@ def tf_idf(
     df_mode: Union[Literal["zero", "mean"], float] = "zero",
     idf_mode: Literal["log", "log_smooth"] = "log_smooth",
     norm: Optional[Literal["l1", "l2"]] = None
-) -> AlgoResult:
+) -> AllTFIDFResult:
     """
     Calculate `TF-IDF` matrix for the given samples.
 
@@ -77,39 +95,36 @@ def tf_idf(
 
     Returns
     -------
-        AlgoResult
-                - values: The TF-IDF matrix, shape as `[num_samples, num_features]`;
-                - idf: The calculated IDF values used for transformation, shape as `[num_features]`;
-                - vocab: The vocabulary built from the samples.
+        AllTFIDFResult
+            - result(_CompatArray_): The TF-IDF matrix, shape as `[num_samples, num_features]`;
+            - idf(_CompatArray_): The calculated IDF values used for transformation, shape as `[num_features]`;
+            - vocab(_Union[Dict[Any, int], int]_): The vocabulary built from the samples.
 
     Examples
     --------
     >>> from cobra_algo.text import CountVectorizer, tf_idf
-    >>> X = np.array([
-    >>>     [0.1, 1.2, 0.3],
-    >>>     [0.0, 0.5, 1.0],
-    >>>     [0.5, 0.5, 0.0],
-    >>> ], dtype=float)
-    ...
-    >>> X = CountVectorizer("matrix").fit_transform(X).to_numpy()
-    ...
-    >>> result = tf_idf(
-    >>>     X,
-    >>>     tf_mode="raw",
-    >>>     idf_mode="log_smooth",
-    >>>     norm=None,
-    >>>     df_mode="zero"
-    >>> )
-    ...
-    >>> result.to_numpy()
+    ... X = np.array([
+    ...     [0.1, 1.2, 0.3],
+    ...     [0.0, 0.5, 1.0],
+    ...     [0.5, 0.5, 0.0],
+    ... ], dtype=float)
+    >>> X = CountVectorizer("matrix").fit_transform(X).result
+    >>> tfidf_result = tf_idf(
+    ...     X,
+    ...     tf_mode="raw",
+    ...     idf_mode="log_smooth",
+    ...     norm=None,
+    ...     df_mode="zero"
+    ... )
+    >>> tfidf_result.result.to_numpy()
     [[0.12876821 1.2        0.38630462]
     [0.         0.5        1.28768207]
     [0.64384104 0.5        0.        ]]
     ...
-    >>> result.idf
+    >>> tfidf_result.idf
     [1.28768207 1.         1.28768207]
     ...
-    >>> result.vocab
+    >>> tfidf_result.vocab
     3
     """
     pipe = CountVectorizer(input_mode)
@@ -117,12 +132,12 @@ def tf_idf(
 
     pipe_result = pipe.fit_transform(D)
     # transformer fit
-    X = pipe_result.to_numpy()
+    X = pipe_result.result
     transformer.fit(X)
     # transformer transform
-    return transformer.transform(
-        X if d is None else pipe.transform(d).to_numpy()
-    ).update_attr(vocab=pipe_result.vocab)
+    tfidf_result = transformer.transform(X if d is None else pipe.transform(d).result)
+
+    return AllTFIDFResult(tfidf_result.result, tfidf_result.idf, pipe_result.vocab)
 
 
 class CountVectorizer:
@@ -133,11 +148,10 @@ class CountVectorizer:
     --------
     >>> from cobra_algo.text import CountVectorizer
     >>> docs = [
-    >>>     ["apple", "banana", "apple"],
-    >>>     ["banana", "orange"],
-    >>>     ["banana", "banana", "apple"]
-    >>> ]
-    ...
+    ...     ["apple", "banana", "apple"],
+    ...     ["banana", "orange"],
+    ...     ["banana", "banana", "apple"]
+    ... ]
     >>> vectorizer = CountVectorizer("tokens")
     >>> result = vectorizer.fit_transform(docs)
     ...
@@ -170,14 +184,14 @@ class CountVectorizer:
         self._input_mode = input_mode
         self._vocab: Union[Dict[Any, int], int] = 0
 
-    def fit(self, docs: Any, /) -> CountVectorizer:
+    def fit(self, docs: object, /) -> CountVectorizer:
         """
         Build vocabulary from documents.
 
         Parameters
         ----------
-            docs : Sequence[Any]
-                A list of documents to build the vocabulary.
+            docs : object
+                A array of documents to build the vocabulary.
                 - _Sequence[Sequence[Any]]_: Each document is a list of tokens when `input_mode` is `"tokens"`;
                 - _MatrixLike_: All documents are represented as a matrix when `input_mode` is `"matrix"`.
 
@@ -187,19 +201,19 @@ class CountVectorizer:
 
         Raises
         ------
-            DimensionError
-                If the input documents have invalid dimensions for the specified `input_mode`.
             VocabularyError
                 If there is an error during building vocabulary.
         """
         try:
             if self._input_mode == "tokens":
                 # input as tokens
+                if not isinstance(docs, Sequence):
+                    raise TypeError(f"`docs` parameter of `CountVectorizer.fit()` must be a sequence when `input_mode` is 'tokens', got {type(docs).__name__}")
                 terms = sorted(set(term for doc in docs for term in doc))
                 self._vocab = {term: i for i, term in enumerate(terms)}
             else:
                 # input as matrix
-                docs_arr = to_numpy(docs, copy=False)
+                docs_arr = CompatArray(docs)
                 if docs_arr.ndim != 2:
                     raise DimensionError(f"`docs` parameter of `CountVectorizer.fit()` must be a 2-D array when `input_mode` is 'matrix', got {docs_arr.ndim}-D")
                 self._vocab = docs_arr.shape[1]
@@ -208,29 +222,27 @@ class CountVectorizer:
         except Exception as e:
             raise VocabularyError("Building vocabulary error.") from e
 
-    def transform(self, docs: Any, /) -> AlgoResult:
+    def transform(self, docs: object, /) -> CountResult:
         """
         Transform documents to count matrix using the built vocabulary.
 
         Parameters
         ----------
-            docs : Sequence[Any]
-                A list of documents to transform based on the built vocabulary.
+            docs : object
+                A array of documents to transform based on the built vocabulary.
                 - _Sequence[Sequence[Any]]_: Each document is a list of tokens when `input_mode` is `"tokens"`;
                 - _MatrixLike_: All documents are represented as a matrix when `input_mode` is `"matrix"`.
 
         Returns
         -------
-            AlgoResult
-                - values: The count matrix, shape as `[num_docs, num_vocabulary]`;
-                - vocab: The vocabulary built from the documents.
+            CountResult
+                - result(_CompatArray_): The count matrix, shape as `[num_docs, num_vocabulary]`;
+                - vocab(_Union[Dict[Any, int], int]_): The vocabulary built from the documents.
 
         Raises
         ------
             NotFittedError
                 If the vocabulary has not been built. Call :meth:`CountVectorizer.fit` first.
-            DimensionError
-                If the input documents have invalid dimensions for the specified `input_mode`.
             CountVectorizerError
                 If there is an error during count vectorization.
         """
@@ -240,43 +252,49 @@ class CountVectorizer:
         try:
             if isinstance(self._vocab, int):
                 # input as matrix
-                docs_arr = to_numpy(docs, copy=False)
+                docs_arr = CompatArray(docs)
                 if docs_arr.ndim != 2:
                     raise DimensionError(f"`docs` parameter of `CountVectorizer.transform()` must be a 2-D array when `input_mode` is 'matrix', got {docs_arr.ndim}-D")
-                result = np.zeros((len(docs_arr), self._vocab), dtype=float)
+                result = docs_arr.cxp.zeros(
+                    (len(docs_arr), self._vocab),
+                    dtype=float,
+                    device=docs_arr.device
+                )
 
                 c = min(docs_arr.shape[1], self._vocab)
                 result[:, :c] = docs_arr[:, :c]
             else:
                 # input as tokens
-                result = np.zeros((len(docs), len(self._vocab)), dtype=float)
+                if not isinstance(docs, Sequence):
+                    raise TypeError(f"`docs` parameter of `CountVectorizer.transform()` must be a sequence when `input_mode` is 'tokens', got {type(docs).__name__}")
+                result = CXP.zeros((len(docs), len(self._vocab)), dtype=float)
                 for i, doc in enumerate(docs):
                     term_counts = Counter(doc)
                     for term, count in term_counts.items():
                         if term in self._vocab:
                             result[i, self._vocab[term]] = count
 
-            return AlgoResult(result, __class__.__name__, vocab=self._vocab)
+            return CountResult(result, self._vocab)
 
         except Exception as e:
             raise CountVectorizerError("Count vectorization error.") from e
 
-    def fit_transform(self, docs: Any, /) -> AlgoResult:
+    def fit_transform(self, docs: object, /) -> CountResult:
         """
         Build vocabulary from documents, then transform documents to count matrix.
 
         Parameters
         ----------
-            docs : Sequence[Any]
-                A list of documents to build the vocabulary and transform based on the built vocabulary.
+            docs : object
+                A array of documents to build the vocabulary and transform based on the built vocabulary.
                 - _Sequence[Sequence[Any]]_: Each document is a list of tokens when `input_mode` is `"tokens"`;
                 - _MatrixLike_: All documents are represented as a matrix when `input_mode` is `"matrix"`.
 
         Returns
         -------
-            AlgoResult
-                - values: The count matrix, shape as `[num_docs, num_vocabulary]`;
-                - vocab: The vocabulary built from the documents.
+            CountResult
+                - result(_CompatArray_): The count matrix, shape as `[num_docs, num_vocabulary]`;
+                - vocab(_Union[Dict[Any, int], int]_): The vocabulary built from the documents.
         """
         return self.fit(docs).transform(docs)
 
@@ -305,7 +323,7 @@ class GeneralizedTFIDF:
     >>>     [0.5, 0.5, 0.0],
     >>> ], dtype=float)
     ...
-    >>> X = CountVectorizer("matrix").fit_transform(X).to_numpy()
+    >>> X = CountVectorizer("matrix").fit_transform(X).result
     ...
     >>> tfidf = GeneralizedTFIDF(
     >>>     tf_mode="raw",
@@ -313,17 +331,17 @@ class GeneralizedTFIDF:
     >>>     norm=None,
     >>>     df_mode="zero"
     >>> )
-    >>> result = tfidf.fit_transform(X)
+    >>> tfidf_result = tfidf.fit_transform(X)
     ...
-    >>> result.to_numpy()
+    >>> tfidf_result.result.to_numpy()
     [[0.12876821 1.2        0.38630462]
     [0.         0.5        1.28768207]
     [0.64384104 0.5        0.        ]]
     ...
-    >>> result.idf
+    >>> tfidf_result.idf
     [1.28768207 1.         1.28768207]
     ...
-    >>> result.vocab
+    >>> tfidf_result.vocab
     3
     """
     def __init__(
@@ -356,15 +374,15 @@ class GeneralizedTFIDF:
             raise ValueError(f"`norm` parameter must be either 'l1', 'l2' or None, got {norm!r}.")
         self._norm = norm
 
-        self._idf: Optional[NDArray[np.float_]] = None
+        self._idf: Optional[CompatArray[type[float], AnyDevice]] = None
 
-    def fit(self, X: NDArray[np.float_], /) -> GeneralizedTFIDF:
+    def fit(self, X: ArrayLike[Any], /) -> GeneralizedTFIDF:
         """
         Calculate and cache `IDF` via the feature matrix from all samples.
 
         Parameters
         ----------
-            X : NDArray[np.float_]
+            X : ArrayLike[Any]
                 The feature matrix from all samples to calculate `IDF`, shape as `[num_all_samples, num_features]`. Must be `non-negative`.
 
         Returns
@@ -373,35 +391,42 @@ class GeneralizedTFIDF:
 
         Raises
         ------
+            TypeError
+                If `X` is not array-like.
+            DimensionError
+                If `X` is not a 2-D array.
             IDFError
                 If there is an error during `IDF` calculation.
         """
-        if not isinstance(X, np.ndarray):
-            raise TypeError(f"`X` parameter of `GeneralizedTFIDF.fit()` must be a numpy array, got {type(X).__name__!r}.")
-        if X.ndim != 2:
-            raise DimensionError(f"`X` parameter of `GeneralizedTFIDF.fit()` must be a 2-D array, got {X.ndim}-D")
+        try:
+            _X = CompatArray(X)
+        except Exception:
+            raise TypeError(f"`X` parameter of `GeneralizedTFIDF.fit()` must be array-like, got {type(X).__name__!r}.") from None
+
+        if _X.ndim != 2:
+            raise DimensionError(f"`X` parameter of `GeneralizedTFIDF.fit()` must be a 2-D array, got {_X.ndim}-D")
 
         try:
-            df = self._compute_df(X)
-            self._idf = self._compute_idf(df, len(X))
+            df = self._compute_df(_X)
+            self._idf = self._compute_idf(df, len(_X))
             return self
         except Exception as e:
             raise IDFError("IDF calculation error.") from e
 
-    def transform(self, X: NDArray[np.float_], /) -> AlgoResult:
+    def transform(self, X: ArrayLike[Any], /) -> TFIDFResult:
         """
         Transform the feature matrix from specific documents to `TF-IDF` matrix using the calculated `IDF`.
 
         Parameters
         ----------
-            X : NDArray[np.float_]
+            X : ArrayLike[Any]
                 The feature matrix from specific samples to transform, shape as `[num_samples, num_features]`. Must be `non-negative` and have the same number of features as the feature matrix used in :meth:`GeneralizedTFIDF.fit`.
 
         Returns
         -------
-            AlgoResult
-                - values: The TF-IDF matrix, shape as `[num_samples, num_features]`;
-                - idf: The calculated IDF values used for transformation, shape as `[num_features]`.
+            TFIDFResult
+                - values(_CompatArray_): The TF-IDF matrix, shape as `[num_samples, num_features]`;
+                - idf(_CompatArray_): The calculated IDF values used for transformation, shape as `[num_features]`.
 
         Raises
         ------
@@ -410,97 +435,102 @@ class GeneralizedTFIDF:
             TFIDFError
                 If there is an error during `TF-IDF` calculation.
         """
-        if not isinstance(X, np.ndarray):
-            raise TypeError(f"`X` parameter of `GeneralizedTFIDF.transform()` must be a numpy array, got {type(X).__name__!r}.")
-        if X.ndim != 2:
-            raise DimensionError(f"`X` parameter of `GeneralizedTFIDF.transform()` must be a 2-D array, got {X.ndim}-D")
+        try:
+            _X = CompatArray(X)
+        except Exception:
+            raise TypeError(f"`X` parameter of `GeneralizedTFIDF.transform()` must be array-like, got {type(X).__name__!r}.") from None
+
+        if _X.ndim != 2:
+            raise DimensionError(f"`X` parameter of `GeneralizedTFIDF.transform()` must be a 2-D array, got {_X.ndim}-D")
+
         if self._use_idf:
             if self._idf is None:
                 raise NotFittedError("IDF is not calculated. Call `GeneralizedTFIDF.fit()` first.")
-            if X.shape[1] != len(self._idf):
-                raise DimensionError(f"The number of features in `X` parameter must match the length of calculated `IDF`, got {X.shape[1]} and {len(self._idf)}.")
+            if _X.shape[1] != len(self._idf):
+                raise DimensionError(f"The number of features in `X` parameter must match the length of calculated `IDF`, got {_X.shape[1]} and {len(self._idf)}.")
 
         try:
-            result = self._compute_tf(X)
+            result = self._compute_tf(_X)
             if self._use_idf and self._idf is not None:
                 result = result * self._idf
 
-            return AlgoResult(self._normalize(result), __class__.__name__, idf=self._idf)
+            return TFIDFResult(self._normalize(result), self._idf)
+
         except Exception as e:
             raise TFIDFError("TF-IDF calculation error.") from e
 
-    def fit_transform(self, X: NDArray[np.float_], /) -> AlgoResult:
+    def fit_transform(self, X: ArrayLike[Any], /) -> TFIDFResult:
         """
         Fit the feature matrix from all samples, then transform it to `TF-IDF` matrix.
 
         Parameters
         ----------
-            X : NDArray[np.float_]
+            X : ArrayLike[Any]
                 The feature matrix from all samples to fit and transform to `TF-IDF` matrix, shape as `[num_all_samples, num_features]`. Must be `non-negative`.
 
         Returns
         -------
-            AlgoResult
-                - values: The TF-IDF matrix, shape as `[num_all_samples, num_features]`;
-                - idf: The calculated IDF values used for transformation, shape as `[num_features]`.
+            TFIDFResult
+                - values(_CompatArray_): The TF-IDF matrix, shape as `[num_all_samples, num_features]`;
+                - idf(_CompatArray_): The calculated IDF values used for transformation, shape as `[num_features]`.
         """
         return self.fit(X).transform(X)
 
-    def _compute_tf(self, X: NDArray[np.float_]) -> NDArray[np.float_]:
+    def _compute_tf(self, X: CompatArray[type[float], AnyDevice]) -> CompatArray[type[float], AnyDevice]:
         """Calculate Term Frequency (TF) for each term in the sample set based on the feature matrix X.
         Result a float array shape as `[num_samples, num_features]`."""
         if self._tf_mode == "norm":
             # norm mode
             row_sum = X.sum(axis=1, keepdims=True)
-            row_sum = np.maximum(row_sum, EPS)
-            return X / row_sum
+            return X / row_sum.maximum(EPS)
         elif self._tf_mode == "log":
             # log mode
-            return np.log(1 + X)
+            return X.log1p()  # log(1 + X)
         else:
             # raw mode
             return X
 
-    def _compute_df(self, X: NDArray[np.float_]) -> NDArray[np.float_]:
+    def _compute_df(self, X: CompatArray[type[float], AnyDevice]) -> CompatArray[type[int], AnyDevice]:
         """Calculate Document Frequency (DF) for each term in the sample set.
         Return a float array shape as `[num_features]`."""
         if isinstance(self._df_mode, float):
             # percentile mode
+            raise NotImplementedError("Percentile-based DF calculation is not implemented yet.")
             threshold = np.quantile(X, self._df_mode, axis=0)
             return np.count_nonzero(X >= threshold, axis=0)
+            (X >= threshold).count_nonzero(axis=0)
         elif self._df_mode == "zero":
             # zero mode
-            return np.count_nonzero(X > 0, axis=0)
+            return (X > 0).count_nonzero(axis=0)
         else:
             # mean mode
             row_mean = X.mean(axis=1, keepdims=True)
-            return np.count_nonzero(X >= row_mean, axis=0)
+            return (X >= row_mean).count_nonzero(axis=0)
 
-    def _compute_idf(self, df: NDArray[np.float_], N: int) -> NDArray[np.float_]:
+    def _compute_idf(self, df: CompatArray[type[int], AnyDevice], N: int) -> CompatArray[type[float], AnyDevice]:
         """Calculate Inverse Document Frequency (IDF) for each term based on the document frequency (DF) and total number of samples (N).
         Return a float array shape as `[num_features]`."""
+        N_arr = df.cxp.asarray(N, dtype=float, device=df.device)
         if self._idf_mode == "log":
             # log mode
-            df = np.maximum(df, EPS)
-            return np.log(N / df)
+            return (N_arr / df.maximum(EPS)).log()
         else:
             # log_smooth mode
-            return np.log((1 + N) / (1 + df)) + 1  # type:ignore
+            return ((N_arr + 1) / (df + 1)).log() + 1
 
-    def _normalize(self, tfidf: NDArray[np.float_]) -> NDArray[np.float_]:
+    def _normalize(self, tfidf: CompatArray[type[float], AnyDevice]) -> CompatArray[type[float], AnyDevice]:
         """Normalize the TF-IDF matrix using the specified norm (L1 or L2)."""
         if self._norm is None:
             return tfidf
 
         if self._norm == "l2":
-            norms = np.linalg.norm(tfidf, axis=1, keepdims=True)
+            norms = tfidf.cxp.vector_norm(tfidf, axis=1, keepdims=True)
         else:
-            norms = np.sum(np.abs(tfidf), axis=1, keepdims=True)
-        norms = np.maximum(norms, EPS)
-        return tfidf / norms
+            norms = tfidf.abs().sum(axis=1, keepdims=True)
+        return tfidf / norms.maximum(EPS)
 
     @property
-    def idf(self) -> Optional[NDArray[np.float_]]:
+    def idf(self) -> Optional[CompatArray[type[float], AnyDevice]]:
         """
         The calculated IDF values for the features. Shape as `[num_features]`.
         """

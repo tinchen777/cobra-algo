@@ -1,7 +1,9 @@
 <div align="center">
 
-<h2 id="title">🐱‍🐉 cobra-algo 🐱‍🐉</h2>
-
+<h2 id="title">
+🐱‍🐉 cobra-algo 🐱‍🐉<br>
+<sub>Lightweight algorithms for machine learning and data processing.</sub>
+</h2>
 
 [![PyPI version](https://img.shields.io/pypi/v/cobra-algo.svg)](https://pypi.org/project/cobra-algo/)
 ![Python](https://img.shields.io/pypi/pyversions/cobra-algo?color=brightgreen)
@@ -15,32 +17,22 @@
 
 ## About
 
-A lightweight and extensible Python library for algorithm implementations in data processing and machine learning.
+`cobra-algo` is a lightweight library of machine learning and data processing algorithms, built for practical use and easy integration.
 
 - Python: 3.9+
-- Runtime deps: `NumPy` (>=1.21, <2.0)
+- Runtime deps: `cobra-array` (>= 0.2.2)
 
 ## Features
 
-- 🚀 Lightweight and Flexible. Minimal dependencies with optional backend support (e.g., PyTorch) for easy integration.
-- 🚀 Extensible Algorithm Collection. A modular toolkit of data processing and machine learning algorithms designed for easy extension.
+- 🚀 **Lightweight by design**: Focused, efficient implementations without unnecessary complexity.
+- 🚀 **Backend flexibility as a feature**: Supports compatible array inputs from different numerical libraries.
 
 ## Installation
 
 ### Install from PyPI
 
-This installs the core package with minimal dependencies.
-
 ```bash
 pip install cobra-algo
-```
-
-### Install with Optional Dependencies
-
-PyTorch support.
-
-```bash
-pip install cobra-algo[torch]
 ```
 
 ## Quick Start
@@ -48,8 +40,7 @@ pip install cobra-algo[torch]
 ## Requirements
 
 - Python >= 3.9
-- `NumPy` >= 1.21, <2.0
-- (Optional) `PyTorch` >= 1.11.0, <2.0
+- `cobra-array` >= 0.2.2
 
 ## License
 

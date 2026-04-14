@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cobra-algo"
 dynamic = ["version"]
-description = "A lightweight and extensible Python library for algorithm implementations in data processing and machine learning."
+description = "A lightweight library of machine learning and data processing algorithms, built for practical use and easy integration."
 readme = "README.md"
 license-files = ["LICENSE"]
 authors = [
@@ -22,14 +22,14 @@ classifiers = [
   "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "numpy>=1.21,<2.0",
+    "cobra-array>=0.2.2",
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=1.11.0,<2.0"]
 dev = [
     "pytest",
     "pytest-cov",
+    "numpy>=1.21,<2.0",
     "scikit-learn>=1.1,<2.0",
 ]
 

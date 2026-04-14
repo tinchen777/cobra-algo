@@ -3,7 +3,7 @@
 cobra-algo
 ===========
 
-A lightweight and extensible Python library for algorithm implementations in data processing and machine learning.
+A lightweight library of machine learning and data processing algorithms, built for practical use and easy integration.
 
 Modules
 -------

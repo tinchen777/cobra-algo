@@ -19,13 +19,13 @@ def test_compare_with_sklearn_1():
     ], dtype=float)
     start = time.time()
     my = GeneralizedTFIDF(tf_mode="raw", idf_mode="log_smooth", norm=None, use_idf=True)
-    r1 = my.fit_transform(X).to_numpy()
+    r1 = my.fit_transform(X).result
     print(r1)
     print("Time taken:", time.time() - start, "seconds")
     
     start = time.time()
     sk = TfidfTransformer(norm=None, smooth_idf=True, use_idf=True)
-    r2 = sk.fit_transform(X).toarray()
+    r2 = sk.fit_transform(X)
     print(r2)
     print("Time taken:", time.time() - start, "seconds")
 
@@ -44,21 +44,21 @@ def test_compare_with_sklearn_2():
     #     [0.5, 0.5, 0.4],
     # ])
 
-    X = CountVectorizer("matrix").fit_transform(X).values
+    X = CountVectorizer("matrix").fit_transform(X).result
 
     start = time.time()
 
     # r1 = tf_idf(X, tf_mode="raw", idf_mode="log_smooth", norm="l2", df_mode="mean")
 
     my = GeneralizedTFIDF(tf_mode="raw", idf_mode="log_smooth", norm=None, df_mode="zero", use_idf=True)
-    r1 = my.fit_transform(X).to_numpy()
+    r1 = my.fit_transform(X).result
     print(r1)
     print("Time taken:", time.time() - start, "seconds")
     
     start = time.time()
 
     sk = TfidfTransformer(norm=None, smooth_idf=True, use_idf=True)
-    r2 = sk.fit_transform(X).toarray()
+    r2 = sk.fit_transform(X)
     print(r2)
     print("Time taken:", time.time() - start, "seconds")
 
@@ -71,12 +71,12 @@ def test_zero_document():
     ], dtype=float)
 
     tfidf = GeneralizedTFIDF(norm="l2", idf_mode="log_smooth")
-    result = tfidf.fit_transform(X).to_numpy()
+    result = tfidf.fit_transform(X).result
     assert np.all(np.isfinite(result))
     print("Result with zero document:\n", result)
 
     sk = TfidfTransformer(norm="l2", smooth_idf=True)
-    r2 = sk.fit_transform(X).toarray()
+    r2 = sk.fit_transform(X)
     print("Result with sklearn:\n", r2)
 
 
@@ -90,7 +90,7 @@ def test_count():
     start = time.time()
     pipe = CountVectorizer("tokens")
     a = pipe.fit_transform(docs)
-    print("count matrix:\n", a.to_numpy())
+    print("count matrix:\n", a.result)
     print(a.vocab)
     print("Time taken:", time.time() - start, "seconds")
     
@@ -101,7 +101,7 @@ def test_count():
     ]
     start = time.time()
     pipe = SkCountVectorizer()
-    a = pipe.fit_transform(docs).toarray()
+    a = pipe.fit_transform(docs)
     print("sklearn count matrix:\n", a)
     print("Time taken:", time.time() - start, "seconds")
 
@@ -120,7 +120,7 @@ def test_tf_idf():
     #     [0.5, 0.5, 0.4],
     # ])
 
-    X = CountVectorizer("matrix").fit_transform(X).values
+    X = CountVectorizer("matrix").fit_transform(X).result
 
     start = time.time()
 
@@ -128,7 +128,7 @@ def test_tf_idf():
 
     # my = GeneralizedTFIDF(tf_mode="raw", idf_mode="log_smooth", norm=None, df_mode="zero", use_idf=True)
     # r1 = my.fit_transform(X).to_numpy()
-    print(r1.to_numpy())
+    print(r1.result)
     print(r1.idf)
     print(r1.vocab)
     
@@ -137,14 +137,20 @@ def test_tf_idf():
     start = time.time()
 
     sk = TfidfTransformer(norm=None, smooth_idf=True, use_idf=True)
-    r2 = sk.fit_transform(X).toarray()
+    r2 = sk.fit_transform(X)
     print(r2)
     print("Time taken:", time.time() - start, "seconds")
 
 
 if __name__ == "__main__":
     test_compare_with_sklearn_1()
+    print("=" * 40)
+    
     test_compare_with_sklearn_2()
+    print("=" * 40)
+    
     test_zero_document()
+    print("=" * 40)
     test_count()
+    print("=" * 40)
     test_tf_idf()

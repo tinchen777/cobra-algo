@@ -1,6 +1,6 @@
 # src/cobra_algo/text/__init__.py
 """
-Text processing algorithms for :pkg:`cobra-algo` package.
+Text processing algorithms for :pkg:`cobra-algo`.
 
 Functions
 ---------
